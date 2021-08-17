@@ -1,3 +1,5 @@
+using API.Helpers;
+using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -36,6 +38,9 @@ namespace API
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             //    .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAd"));
 
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddAutoMapper(typeof(MappingProfiles));
             services.AddControllers();
             services.AddDbContext<StoreContext>(x => x.UseSqlServer(_config.GetConnectionString("DefaultConnection")));
             services.AddSwaggerGen(c =>
@@ -56,6 +61,7 @@ namespace API
 
             app.UseHttpsRedirection();
 
+            app.UseStaticFiles();
             app.UseRouting();
 
             app.UseAuthentication();
