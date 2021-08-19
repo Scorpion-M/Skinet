@@ -1,3 +1,4 @@
+using API.Errors;
 using API.Helpers;
 using API.Middleware;
 using Core.Interfaces;
@@ -46,7 +47,25 @@ namespace API
             services.AddDbContext<StoreContext>(x => x.UseSqlServer(_config.GetConnectionString("DefaultConnection")));
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Skinet", Version = "v1" });
+            });
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = actionContext =>
+                {
+                    var errors = actionContext.ModelState
+                        .Where(e => e.Value.Errors.Count > 0)
+                        .SelectMany(x => x.Value.Errors)
+                        .Select(x => x.ErrorMessage).ToArray();
+                    var errorResponse = new ApiValidationErrorResponse
+                    {
+                        Errors = errors
+
+                    };
+
+                    return new BadRequestObjectResult(errorResponse);
+                };
+
             });
         }
 
@@ -58,7 +77,7 @@ namespace API
             {
                 app.UseMiddleware<ExceptionMiddleware>();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Skinet v1"));
             }
             app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
